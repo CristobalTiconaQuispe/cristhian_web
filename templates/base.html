@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Golden Moments{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.index') }}" class="nav-logo">
+                <span class="logo-icon">✨</span>
+                <span class="logo-text">Golden Moments</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{{ url_for('main.index') }}" class="nav-link">Inicio</a>
+                <a href="{{ url_for('main.catalogo') }}" class="nav-link">Catálogo</a>
+                <a href="{{ url_for('main.nosotros') }}" class="nav-link">Nosotros</a>
+                <a href="{{ url_for('main.contacto') }}" class="nav-link">Contacto</a>
+                <a href="{{ url_for('cart.ver_carrito') }}" class="nav-link nav-cart">
+                    🛒
+                    {% set carrito = session.get('carrito', {}) %}
+                    {% if carrito %}
+                    <span class="cart-badge">{{ carrito.values()|sum }}</span>
+                    {% endif %}
+                </a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-link admin-link">⚙️</a>
+                <a href="{{ url_for('admin.logout') }}" class="nav-link">🚪</a>
+                {% endif %}
+                <button id="theme-toggle" class="theme-btn" aria-label="Cambiar modo">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="logo-icon">✨</span>
+                <span>Golden Moments</span>
+            </div>
+            <p class="footer-text">Regalos especiales para momentos especiales</p>
+            <div class="footer-links">
+                <a href="{{ url_for('main.index') }}">Inicio</a>
+                <a href="{{ url_for('main.catalogo') }}">Catálogo</a>
+                <a href="{{ url_for('main.nosotros') }}">Nosotros</a>
+                <a href="{{ url_for('main.contacto') }}">Contacto</a>
+            </div>
+            <p class="footer-copy">&copy; 2026 Golden Moments. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/{{ config.get('WHATSAPP_NUMBER', '59163107834') }}" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Contactar por WhatsApp">
+        <span>💬</span>
+    </a>
+
+    <script>
+    (function() {
+        const html = document.documentElement;
+        const toggle = document.getElementById('theme-toggle');
+        const saved = localStorage.getItem('theme') || 'light';
+
+        html.setAttribute('data-theme', saved);
+        toggle.textContent = saved === 'dark' ? '☀️' : '🌙';
+
+        toggle.addEventListener('click', function() {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            toggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+    })();
+    </script>
+</body>
+</html>

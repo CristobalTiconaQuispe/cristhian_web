@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Carrito - Golden Moments{% endblock %}
+
+{% block content %}
+<section class="carrito-section">
+    <div class="section-header">
+        <h2 class="section-title">🛒 Tu Carrito</h2>
+    </div>
+
+    {% if items %}
+    <div class="carrito-container">
+        <div class="carrito-items">
+            {% for item in items %}
+            <div class="carrito-item">
+                <div class="carrito-item-img">
+                    {% if item.producto.imagen %}
+                    <img src="{{ url_for('static', filename='uploads/' + item.producto.imagen) }}"
+                         alt="{{ item.producto.nombre }}">
+                    {% else %}
+                    <div class="item-img-placeholder">🎁</div>
+                    {% endif %}
+                </div>
+                <div class="carrito-item-info">
+                    <h4>{{ item.producto.nombre }}</h4>
+                    {% if item.producto.descripcion %}
+                    <p class="item-desc">{{ item.producto.descripcion[:80] }}{% if item.producto.descripcion|length > 80 %}...{% endif %}</p>
+                    {% endif %}
+                    <span class="item-precio-unit">Bs. {{ "%.2f"|format(item.producto.precio) }} c/u</span>
+                </div>
+                <div class="carrito-item-cantidad">
+                    <form action="{{ url_for('cart.actualizar', producto_id=item.producto.id) }}" method="POST" class="qty-form">
+                        <button type="submit" name="cantidad" value="{{ item.cantidad - 1 }}" class="qty-btn"
+                                {% if item.cantidad <= 1 %}disabled{% endif %}>−</button>
+                        <span class="qty-value">{{ item.cantidad }}</span>
+                        <button type="submit" name="cantidad" value="{{ item.cantidad + 1 }}" class="qty-btn">+</button>
+                    </form>
+                </div>
+                <div class="carrito-item-subtotal">
+                    <span class="subtotal-label">Subtotal</span>
+                    <span class="subtotal-value">Bs. {{ "%.2f"|format(item.subtotal) }}</span>
+                </div>
+                <div class="carrito-item-accion">
+                    <form action="{{ url_for('cart.eliminar', producto_id=item.producto.id) }}" method="POST">
+                        <button type="submit" class="btn-remove" title="Eliminar">&times;</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="carrito-resumen">
+            <h3>Resumen del pedido</h3>
+            <div class="resumen-lineas">
+                {% for item in items %}
+                <div class="resumen-linea">
+                    <span>{{ item.producto.nombre }} × {{ item.cantidad }}</span>
+                    <span>Bs. {{ "%.2f"|format(item.subtotal) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="resumen-total">
+                <span>Total</span>
+                <span class="total-value">Bs. {{ "%.2f"|format(total) }}</span>
+            </div>
+            <a href="https://wa.me/{{ config.get('WHATSAPP_NUMBER', '59163107834') }}?text={{ mensaje_whatsapp }}"
+               target="_blank"
+               rel="noopener"
+               class="btn-whatsapp-order">
+                💬 Solicitar por WhatsApp
+            </a>
+            <a href="{{ url_for('main.catalogo') }}" class="btn-seguir-comprando">← Seguir comprando</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">🛒</span>
+        <h3>Tu carrito está vacío</h3>
+        <p>Agrega productos para realizar un pedido.</p>
+        <a href="{{ url_for('main.catalogo') }}" class="btn-primary">Ver productos</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - Golden Moments{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="admin-header">
+        <h2>⚙️ Panel de Administración</h2>
+        <div class="admin-header-actions">
+            <a href="{{ url_for('admin.nuevo_producto') }}" class="btn-primary">+ Nuevo Producto</a>
+            <a href="{{ url_for('admin.lista_productos') }}" class="btn-secondary">Ver productos</a>
+            <a href="{{ url_for('admin.lista_categorias') }}" class="btn-secondary">Categorías</a>
+        </div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <span class="stat-icon">📦</span>
+            <span class="stat-value">{{ total_productos }}</span>
+            <span class="stat-label">Productos</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🏷️</span>
+            <span class="stat-value">{{ categorias }}</span>
+            <span class="stat-label">Categorías</span>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h3>Últimos productos agregados</h3>
+        {% if ultimos %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Categoría</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in ultimos %}
+                <tr>
+                    <td>
+                        {% if producto.imagen %}
+                        <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}"
+                             alt="{{ producto.nombre }}" class="table-img">
+                        {% else %}
+                        <span class="table-img-placeholder">🎁</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ producto.nombre }}</td>
+                    <td>Bs. {{ "%.2f"|format(producto.precio) }}</td>
+                    <td><span class="badge">{{ producto.categoria_rel.nombre if producto.categoria_rel else '—' }}</span></td>
+                    <td class="table-actions">
+                        <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn-small btn-edit">✏️</a>
+                        <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST"
+                              onsubmit="return confirm('¿Eliminar ' + {{ producto.nombre|tojson|safe }} + '?')" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-small btn-delete">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>Aún no hay productos. ¡Crea tu primer producto!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

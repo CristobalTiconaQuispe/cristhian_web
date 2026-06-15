@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo - Golden Moments{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="page-title">📦 Catálogo de Productos</h1>
+    <p class="page-subtitle">Encuentra el regalo perfecto</p>
+</section>
+
+<section class="section">
+    {% if categorias %}
+    <div class="categoria-filtro">
+        <a href="{{ url_for('main.catalogo') }}"
+           class="cat-btn {% if not categoria_seleccionada %}active{% endif %}">
+            Todos
+        </a>
+        {% for cat in categorias %}
+        <a href="{{ url_for('main.catalogo', categoria=cat.id) }}"
+           class="cat-btn {% if categoria_seleccionada == cat.id %}active{% endif %}">
+            {{ cat.nombre }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if productos %}
+    <div class="productos-grid">
+        {% for producto in productos %}
+        <div class="producto-card">
+            <div class="producto-img-wrapper">
+                {% if producto.imagen %}
+                <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}"
+                     alt="{{ producto.nombre }}"
+                     class="producto-img"
+                     loading="lazy">
+                {% else %}
+                <div class="producto-img-placeholder">
+                    <span>🎁</span>
+                </div>
+                {% endif %}
+                {% if producto.categoria_rel %}
+                <span class="producto-categoria">{{ producto.categoria_rel.nombre }}</span>
+                {% endif %}
+                {% if producto.destacado %}
+                <span class="producto-badge-destacado">✨ Destacado</span>
+                {% endif %}
+            </div>
+            <div class="producto-info">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                {% if producto.descripcion %}
+                <p class="producto-descripcion">{{ producto.descripcion }}</p>
+                {% endif %}
+                <div class="producto-footer">
+                    <span class="producto-precio">Bs. {{ "%.2f"|format(producto.precio) }}</span>
+                    <form action="{{ url_for('cart.agregar', producto_id=producto.id) }}" method="POST" class="add-cart-form">
+                        <button type="submit" class="btn-add-cart">
+                            <span>🛒</span> Agregar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">📦</span>
+        <h3>No hay productos disponibles</h3>
+        <p>Pronto estaremos añadiendo nuevos productos a nuestro catálogo.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Golden Moments - Inicio{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">✨ Golden Moments</h1>
+        <p class="hero-subtitle">Regalos especiales para momentos especiales</p>
+        <a href="{{ url_for('main.catalogo') }}" class="btn-hero">Ver catálogo</a>
+    </div>
+</section>
+
+{% if destacados %}
+<section class="section">
+    <div class="section-header">
+        <h2 class="section-title">🌟 Productos Destacados</h2>
+        <p class="section-subtitle">Los favoritos de nuestros clientes</p>
+    </div>
+    <div class="productos-grid">
+        {% for producto in destacados %}
+        <div class="producto-card">
+            <div class="producto-img-wrapper">
+                {% if producto.imagen %}
+                <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}"
+                     alt="{{ producto.nombre }}"
+                     class="producto-img"
+                     loading="lazy">
+                {% else %}
+                <div class="producto-img-placeholder">
+                    <span>🎁</span>
+                </div>
+                {% endif %}
+                {% if producto.categoria_rel %}
+                <span class="producto-categoria">{{ producto.categoria_rel.nombre }}</span>
+                {% endif %}
+                <span class="producto-badge-destacado">✨ Destacado</span>
+            </div>
+            <div class="producto-info">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                {% if producto.descripcion %}
+                <p class="producto-descripcion">{{ producto.descripcion }}</p>
+                {% endif %}
+                <div class="producto-footer">
+                    <span class="producto-precio">Bs. {{ "%.2f"|format(producto.precio) }}</span>
+                    <form action="{{ url_for('cart.agregar', producto_id=producto.id) }}" method="POST" class="add-cart-form">
+                        <button type="submit" class="btn-add-cart">
+                            <span>🛒</span> Agregar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="section-footer">
+        <a href="{{ url_for('main.catalogo') }}" class="btn-primary">Ver todos los productos →</a>
+    </div>
+</section>
+{% endif %}
+
+<section class="section valores-section">
+    <div class="section-header">
+        <h2 class="section-title">¿Por qué elegirnos?</h2>
+    </div>
+    <div class="valores-grid">
+        <div class="valor-card">
+            <span class="valor-icon">🎁</span>
+            <h3>Productos de Calidad</h3>
+            <p>Seleccionamos cada detalle para que tu regalo sea perfecto.</p>
+        </div>
+        <div class="valor-card">
+            <span class="valor-icon">🚚</span>
+            <h3>Envíos Rápidos</h3>
+            <p>Entregas puntuales para que nunca llegues tarde.</p>
+        </div>
+        <div class="valor-card">
+            <span class="valor-icon">💬</span>
+            <h3>Atención Personalizada</h3>
+            <p>Te ayudamos a encontrar el regalo ideal.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section cta-section">
+    <div class="cta-content">
+        <h2>¿Listo para regalar?</h2>
+        <p>Explora nuestro catálogo y encuentra el detalle perfecto.</p>
+        <a href="{{ url_for('main.catalogo') }}" class="btn-primary btn-cta">Ir al catálogo</a>
+    </div>
+</section>
+{% endblock %}

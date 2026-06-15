@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} - Golden Moments{% endblock %}
+
+{% block content %}
+<div class="admin-section form-page">
+    <div class="admin-header">
+        <h2>{{ titulo }}</h2>
+        <a href="{{ url_for('admin.lista_productos') }}" class="btn-secondary">← Volver</a>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombre">{{ form.nombre.label }} <span class="required">*</span></label>
+                    {{ form.nombre(class="form-input", placeholder="Ej: Ramo de Rosas Eterno") }}
+                    {% if form.nombre.errors %}
+                    <span class="form-error">{{ form.nombre.errors[0] }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="precio">{{ form.precio.label }} <span class="required">*</span></label>
+                    {{ form.precio(class="form-input", placeholder="Ej: 49.99") }}
+                    {% if form.precio.errors %}
+                    <span class="form-error">{{ form.precio.errors[0] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">{{ form.descripcion.label }}</label>
+                {{ form.descripcion(class="form-textarea", placeholder="Describe el producto...", rows=4) }}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="categoria_id">{{ form.categoria_id.label }}</label>
+                    {{ form.categoria_id(class="form-input") }}
+                    <small class="form-help">
+                        <a href="{{ url_for('admin.lista_categorias') }}" target="_blank">+ Gestionar categorías</a>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="imagen">{{ form.imagen.label }}</label>
+                    {{ form.imagen(class="form-file") }}
+                    {% if form.imagen.errors %}
+                    <span class="form-error">{{ form.imagen.errors[0] }}</span>
+                    {% endif %}
+                    <small class="form-help">Formatos: JPG, PNG, GIF, WebP. Máximo 16MB</small>
+                </div>
+            </div>
+
+            <div class="form-group form-checkbox">
+                <label class="checkbox-label">
+                    {{ form.destacado(class="form-checkbox-input") }}
+                    <span class="checkbox-custom"></span>
+                    {{ form.destacado.label.text }}
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.lista_productos') }}" class="btn-secondary">Cancelar</a>
+                {{ form.submit(class="btn-submit") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
