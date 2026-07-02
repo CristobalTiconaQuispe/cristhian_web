@@ -12,6 +12,6 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    WHATSAPP_NUMBER = os.environ.get('WHATSAPP_NUMBER') or '59163107834'
+    WHATSAPP_NUMBER = os.environ.get('WHATSAPP_NUMBER') or '59173502384'
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'

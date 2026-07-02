@@ -25,8 +25,9 @@
                 {% for producto in productos %}
                 <tr>
                     <td>
-                        {% if producto.imagen %}
-                        <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}"
+                        {% set img = producto.get_primera_imagen() %}
+                        {% if img %}
+                        <img src="{{ url_for('static', filename='uploads/' + img) }}"
                              alt="{{ producto.nombre }}" class="table-img">
                         {% else %}
                         <span class="table-img-placeholder">🎁</span>

@@ -31,6 +31,12 @@ def catalogo():
     )
 
 
+@main_bp.route('/producto/<int:id>')
+def producto_detalle(id):
+    producto = Producto.query.get_or_404(id)
+    return render_template('producto_detalle.html', producto=producto)
+
+
 @main_bp.route('/nosotros')
 def nosotros():
     return render_template('nosotros.html')

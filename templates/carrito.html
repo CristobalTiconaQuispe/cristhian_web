@@ -13,8 +13,9 @@
             {% for item in items %}
             <div class="carrito-item">
                 <div class="carrito-item-img">
-                    {% if item.producto.imagen %}
-                    <img src="{{ url_for('static', filename='uploads/' + item.producto.imagen) }}"
+                    {% set img = item.producto.get_primera_imagen() %}
+                    {% if img %}
+                    <img src="{{ url_for('static', filename='uploads/' + img) }}"
                          alt="{{ item.producto.nombre }}">
                     {% else %}
                     <div class="item-img-placeholder">🎁</div>
@@ -29,6 +30,7 @@
                 </div>
                 <div class="carrito-item-cantidad">
                     <form action="{{ url_for('cart.actualizar', producto_id=item.producto.id) }}" method="POST" class="qty-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" name="cantidad" value="{{ item.cantidad - 1 }}" class="qty-btn"
                                 {% if item.cantidad <= 1 %}disabled{% endif %}>−</button>
                         <span class="qty-value">{{ item.cantidad }}</span>
@@ -41,6 +43,7 @@
                 </div>
                 <div class="carrito-item-accion">
                     <form action="{{ url_for('cart.eliminar', producto_id=item.producto.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn-remove" title="Eliminar">&times;</button>
                     </form>
                 </div>

@@ -20,16 +20,19 @@
         {% for producto in destacados %}
         <div class="producto-card">
             <div class="producto-img-wrapper">
-                {% if producto.imagen %}
-                <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}"
-                     alt="{{ producto.nombre }}"
-                     class="producto-img"
-                     loading="lazy">
-                {% else %}
-                <div class="producto-img-placeholder">
-                    <span>🎁</span>
-                </div>
-                {% endif %}
+                {% set img = producto.get_primera_imagen() %}
+                <a href="{{ url_for('main.producto_detalle', id=producto.id) }}">
+                    {% if img %}
+                    <img src="{{ url_for('static', filename='uploads/' + img) }}"
+                         alt="{{ producto.nombre }}"
+                         class="producto-img"
+                         loading="lazy">
+                    {% else %}
+                    <div class="producto-img-placeholder">
+                        <span>🎁</span>
+                    </div>
+                    {% endif %}
+                </a>
                 {% if producto.categoria_rel %}
                 <span class="producto-categoria">{{ producto.categoria_rel.nombre }}</span>
                 {% endif %}
@@ -43,6 +46,7 @@
                 <div class="producto-footer">
                     <span class="producto-precio">Bs. {{ "%.2f"|format(producto.precio) }}</span>
                     <form action="{{ url_for('cart.agregar', producto_id=producto.id) }}" method="POST" class="add-cart-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn-add-cart">
                             <span>🛒</span> Agregar
                         </button>

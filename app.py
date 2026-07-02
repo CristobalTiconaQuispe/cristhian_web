@@ -60,7 +60,7 @@ def _crear_admin_default():
 
 def _crear_categorias_default():
     if Categoria.query.count() == 0:
-        for nombre in ['Flores', 'Peluches', 'Velas', 'Joyas', 'Canastas']:
+        for nombre in ['Regalos Personalizados', 'Decoraci\u00f3n', 'Accesorios', 'Joyer\u00eda']:
             db.session.add(Categoria(nombre=nombre))
         db.session.commit()
 

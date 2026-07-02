@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}{{ producto.nombre }} - Golden Moments{% endblock %}
+
+{% block content %}
+{% set imagenes = producto.get_imagenes() %}
+{% set total_imagenes = imagenes|length %}
+
+<section class="detalle-section">
+    <a href="{{ url_for('main.catalogo') }}" class="btn-back-detalle" onclick="history.back(); return false;">← Volver</a>
+
+    <div class="detalle-grid">
+        <div class="detalle-imagenes">
+            {% if total_imagenes > 0 %}
+            <div class="carrusel" id="carrusel">
+                <div class="carrusel-track" id="carruselTrack">
+                    {% for img in imagenes %}
+                    <div class="carrusel-slide {% if loop.first %}active{% endif %}">
+                        <img src="{{ url_for('static', filename='uploads/' + img) }}"
+                             alt="{{ producto.nombre }} - Foto {{ loop.index }}"
+                             class="carrusel-img"
+                             loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if total_imagenes > 1 %}
+                <button class="carrusel-btn carrusel-prev" id="carruselPrev" aria-label="Anterior">&#10094;</button>
+                <button class="carrusel-btn carrusel-next" id="carruselNext" aria-label="Siguiente">&#10095;</button>
+                <div class="carrusel-dots" id="carruselDots">
+                    {% for i in range(total_imagenes) %}
+                    <button class="carrusel-dot {% if loop.first %}active{% endif %}"
+                            data-index="{{ i }}" aria-label="Foto {{ loop.index }}"></button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% if total_imagenes > 1 %}
+            <div class="carrusel-thumbs">
+                {% for img in imagenes %}
+                <button class="carrusel-thumb {% if loop.first %}active{% endif %}"
+                        data-index="{{ loop.index0 }}">
+                    <img src="{{ url_for('static', filename='uploads/' + img) }}"
+                         alt="Miniatura {{ loop.index }}"
+                         loading="lazy">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="detalle-img-placeholder">
+                <span>🎁</span>
+                <p>Sin imagen disponible</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="detalle-info">
+            {% if producto.categoria_rel %}
+            <span class="detalle-categoria">{{ producto.categoria_rel.nombre }}</span>
+            {% endif %}
+            <h1 class="detalle-nombre">{{ producto.nombre }}</h1>
+            <p class="detalle-precio">Bs. {{ "%.2f"|format(producto.precio) }}</p>
+            {% if producto.descripcion %}
+            <div class="detalle-descripcion">
+                <h3>Descripción</h3>
+                <p>{{ producto.descripcion }}</p>
+            </div>
+            {% endif %}
+            <form action="{{ url_for('cart.agregar', producto_id=producto.id) }}" method="POST" class="detalle-add-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-add-cart btn-add-cart-lg">🛒 Agregar al carrito</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% set total_imagenes2 = producto.get_imagenes()|length %}
+{% if total_imagenes2 > 1 %}
+<script>
+(function() {
+    const track = document.getElementById('carruselTrack');
+    const slides = track.querySelectorAll('.carrusel-slide');
+    const prev = document.getElementById('carruselPrev');
+    const next = document.getElementById('carruselNext');
+    const dots = document.querySelectorAll('.carrusel-dot');
+    const thumbs = document.querySelectorAll('.carrusel-thumb');
+    let current = 0;
+
+    function goTo(index) {
+        if (index < 0) index = slides.length - 1;
+        if (index >= slides.length) index = 0;
+        current = index;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        thumbs.forEach((t, i) => t.classList.toggle('active', i === current));
+    }
+
+    if (prev) prev.addEventListener('click', () => goTo(current - 1));
+    if (next) next.addEventListener('click', () => goTo(current + 1));
+    dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.index))));
+    thumbs.forEach(t => t.addEventListener('click', () => goTo(parseInt(t.dataset.index))));
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') goTo(current - 1);
+        if (e.key === 'ArrowRight') goTo(current + 1);
+    });
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    track.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+    track.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) goTo(current + 1);
+            else goTo(current - 1);
+        }
+    }, {passive: true});
+})();
+</script>
+{% endif %}
+{% endblock %}

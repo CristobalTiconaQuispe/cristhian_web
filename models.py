@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -26,10 +27,22 @@ class Producto(db.Model):
     nombre = db.Column(db.String(200), nullable=False)
     descripcion = db.Column(db.Text)
     precio = db.Column(db.Float, nullable=False)
-    imagen = db.Column(db.String(300))
+    imagenes = db.Column(db.Text)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=True)
     destacado = db.Column(db.Boolean, default=False)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_imagenes(self):
+        if not self.imagenes:
+            return []
+        try:
+            return json.loads(self.imagenes)
+        except (json.JSONDecodeError, TypeError):
+            return []
+
+    def get_primera_imagen(self):
+        imagenes = self.get_imagenes()
+        return imagenes[0] if imagenes else None
 
     def __repr__(self):
         return f'<Producto {self.nombre}>'

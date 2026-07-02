@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
@@ -8,6 +9,8 @@ from models import db, Admin, Producto, Categoria
 from forms import ProductoForm, LoginForm
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+CAMPOS_IMAGEN = ['imagen_1', 'imagen_2', 'imagen_3']
 
 
 def _populate_categoria_choices(form):
@@ -76,10 +79,7 @@ def nuevo_producto():
             categoria_id=cat_id,
             destacado=form.destacado.data
         )
-        if form.imagen.data:
-            filename = _guardar_imagen(form.imagen.data)
-            if filename:
-                producto.imagen = filename
+        producto.imagenes = _guardar_imagenes(form)
 
         db.session.add(producto)
         db.session.commit()
@@ -103,11 +103,10 @@ def editar_producto(id):
         producto.categoria_id = form.categoria_id.data or None
         producto.destacado = form.destacado.data
 
-        if form.imagen.data:
-            filename = _guardar_imagen(form.imagen.data)
-            if filename:
-                _eliminar_imagen(producto.imagen)
-                producto.imagen = filename
+        nuevas = _guardar_imagenes(form)
+        if nuevas:
+            _eliminar_imagenes(producto)
+            producto.imagenes = nuevas
 
         db.session.commit()
         flash('Producto actualizado exitosamente', 'success')
@@ -120,7 +119,7 @@ def editar_producto(id):
 @login_required
 def eliminar_producto(id):
     producto = Producto.query.get_or_404(id)
-    _eliminar_imagen(producto.imagen)
+    _eliminar_imagenes(producto)
     db.session.delete(producto)
     db.session.commit()
     flash('Producto eliminado correctamente', 'success')
@@ -185,32 +184,32 @@ def eliminar_categoria(id):
     return redirect(url_for('admin.lista_categorias'))
 
 
-def _guardar_imagen(file):
-    if not file or file.filename == '':
-        return None
-    filename = secure_filename(file.filename)
-    parts = filename.rsplit('.', 1)
-    ext = parts[-1].lower() if len(parts) > 1 and parts[-1] else ''
-    if not ext or ext not in Config.ALLOWED_EXTENSIONS:
-        return None
+def _guardar_imagenes(form):
+    nombres = []
+    for campo in CAMPOS_IMAGEN:
+        file = getattr(form, campo).data
+        if not file or file.filename == '':
+            continue
+        filename = secure_filename(file.filename)
+        parts = filename.rsplit('.', 1)
+        ext = parts[-1].lower() if len(parts) > 1 and parts[-1] else ''
+        if not ext or ext not in Config.ALLOWED_EXTENSIONS:
+            continue
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        path = os.path.join(Config.UPLOAD_FOLDER, filename)
+        file.save(path)
+        try:
+            from PIL import Image
+            Image.open(path).verify()
+        except Exception:
+            os.remove(path)
+            continue
+        nombres.append(filename)
+    return json.dumps(nombres) if nombres else ''
 
-    filename = f"{uuid.uuid4().hex}.{ext}"
-    path = os.path.join(Config.UPLOAD_FOLDER, filename)
-    file.save(path)
 
-    try:
-        from PIL import Image
-        Image.open(path).verify()
-    except Exception:
-        os.remove(path)
-        return None
-
-    return filename
-
-
-def _eliminar_imagen(filename):
-    if not filename:
-        return
-    path = os.path.join(Config.UPLOAD_FOLDER, filename)
-    if os.path.exists(path):
-        os.remove(path)
+def _eliminar_imagenes(producto):
+    for nombre in producto.get_imagenes():
+        path = os.path.join(Config.UPLOAD_FOLDER, nombre)
+        if os.path.exists(path):
+            os.remove(path)
