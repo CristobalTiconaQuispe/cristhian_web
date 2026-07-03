@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import product_card, empty_state %}
 {% block title %}Catálogo - Golden Moments{% endblock %}
 
 {% block content %}
@@ -27,11 +26,52 @@
     {% if productos %}
     <div class="productos-grid">
         {% for producto in productos %}
-        {{ product_card(producto, show_destacado=true) }}
+        <div class="producto-card">
+            <div class="producto-img-wrapper">
+                {% set img = producto.get_primera_imagen() %}
+                <a href="{{ url_for('main.producto_detalle', id=producto.id) }}">
+                    {% if img %}
+                    <img src="{{ url_for('static', filename='uploads/' + img) }}"
+                         alt="{{ producto.nombre }}"
+                         class="producto-img"
+                         loading="lazy">
+                    {% else %}
+                    <div class="producto-img-placeholder">
+                        <span>🎁</span>
+                    </div>
+                    {% endif %}
+                </a>
+                {% if producto.categoria_rel %}
+                <span class="producto-categoria">{{ producto.categoria_rel.nombre }}</span>
+                {% endif %}
+                {% if producto.destacado %}
+                <span class="producto-badge-destacado">✨ Destacado</span>
+                {% endif %}
+            </div>
+            <div class="producto-info">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                {% if producto.descripcion %}
+                <p class="producto-descripcion">{{ producto.descripcion }}</p>
+                {% endif %}
+                <div class="producto-footer">
+                    <span class="producto-precio">Bs. {{ "%.2f"|format(producto.precio) }}</span>
+                    <form action="{{ url_for('cart.agregar', producto_id=producto.id) }}" method="POST" class="add-cart-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-add-cart">
+                            <span>🛒</span> Agregar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </div>
     {% else %}
-    {{ empty_state('📦', 'No hay productos disponibles', 'Pronto estaremos añadiendo nuevos productos a nuestro catálogo.') }}
+    <div class="empty-state">
+        <span class="empty-icon">📦</span>
+        <h3>No hay productos disponibles</h3>
+        <p>Pronto estaremos añadiendo nuevos productos a nuestro catálogo.</p>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

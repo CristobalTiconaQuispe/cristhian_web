@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import admin_product_row, empty_state %}
 {% block title %}Productos - Golden Moments{% endblock %}
 
 {% block content %}
@@ -24,13 +23,40 @@
             </thead>
             <tbody>
                 {% for producto in productos %}
-                {{ admin_product_row(producto) }}
+                <tr>
+                    <td>
+                        {% set img = producto.get_primera_imagen() %}
+                        {% if img %}
+                        <img src="{{ url_for('static', filename='uploads/' + img) }}"
+                             alt="{{ producto.nombre }}" class="table-img">
+                        {% else %}
+                        <span class="table-img-placeholder">🎁</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ producto.nombre }}</strong></td>
+                    <td class="table-desc">{{ producto.descripcion[:60] if producto.descripcion else '—' }}{% if producto.descripcion and producto.descripcion|length > 60 %}...{% endif %}</td>
+                    <td>Bs. {{ "%.2f"|format(producto.precio) }}</td>
+                    <td><span class="badge">{{ producto.categoria_rel.nombre if producto.categoria_rel else '—' }}</span></td>
+                    <td class="table-actions">
+                        <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn-small btn-edit" title="Editar">✏️</a>
+                        <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST"
+                              onsubmit="return confirm('¿Eliminar ' + {{ producto.nombre|tojson|safe }} + '?')" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-small btn-delete" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% else %}
-    {{ empty_state('📦', 'No hay productos', 'Comienza agregando tu primer producto.', url_for('admin.nuevo_producto'), '+ Nuevo Producto') }}
+    <div class="empty-state">
+        <span class="empty-icon">📦</span>
+        <h3>No hay productos</h3>
+        <p>Comienza agregando tu primer producto.</p>
+        <a href="{{ url_for('admin.nuevo_producto') }}" class="btn-primary">+ Nuevo Producto</a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
