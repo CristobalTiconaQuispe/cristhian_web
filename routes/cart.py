@@ -1,41 +1,15 @@
-import urllib.parse
 from flask import Blueprint, render_template, session, request, redirect, url_for
 from models import Producto
+from utils.cart_utils import obtener_items_carrito, generar_mensaje_whatsapp
 
 cart_bp = Blueprint('cart', __name__)
 
 
 @cart_bp.route('/carrito')
 def ver_carrito():
-    carrito = session.get('carrito', {})
-    items = []
-    total = 0
-
-    for producto_id, cantidad in carrito.items():
-        producto = Producto.query.get(int(producto_id))
-        if producto:
-            subtotal = producto.precio * cantidad
-            total += subtotal
-            items.append({
-                'producto': producto,
-                'cantidad': cantidad,
-                'subtotal': subtotal
-            })
-
-    mensaje = _generar_mensaje_whatsapp(items, total)
-
+    items, total = obtener_items_carrito(session)
+    mensaje = generar_mensaje_whatsapp(items, total)
     return render_template('carrito.html', items=items, total=total, mensaje_whatsapp=mensaje)
-
-
-def _generar_mensaje_whatsapp(items, total):
-    lineas = ['¡Hola! Quiero hacer un pedido:']
-    for item in items:
-        lineas.append(
-            f"• {item['producto'].nombre} × {item['cantidad']} - "
-            f"Bs. {item['subtotal']:.2f}"
-        )
-    lineas.append(f"Total del pedido: Bs. {total:.2f}")
-    return urllib.parse.quote('\n'.join(lineas))
 
 
 @cart_bp.route('/carrito/agregar/<int:producto_id>', methods=['POST'])

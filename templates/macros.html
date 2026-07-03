@@ -1,0 +1,93 @@
+{% macro price(value) %}
+Bs. {{ "%.2f"|format(value) }}
+{% endmacro %}
+
+{% macro product_img(producto, class_name='producto-img') %}
+{% set img = producto.get_primera_imagen() %}
+{% if img %}
+<img src="{{ url_for('static', filename='uploads/' + img) }}"
+     alt="{{ producto.nombre }}"
+     class="{{ class_name }}"
+     loading="lazy">
+{% else %}
+<div class="{{ class_name }}-placeholder">
+    <span>🎁</span>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro product_card(producto, show_destacado=true) %}
+<div class="producto-card">
+    <div class="producto-img-wrapper">
+        <a href="{{ url_for('main.producto_detalle', id=producto.id) }}">
+            {{ product_img(producto) }}
+        </a>
+        {% if producto.categoria_rel %}
+        <span class="producto-categoria">{{ producto.categoria_rel.nombre }}</span>
+        {% endif %}
+        {% if show_destacado and producto.destacado %}
+        <span class="producto-badge-destacado">✨ Destacado</span>
+        {% endif %}
+    </div>
+    <div class="producto-info">
+        <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+        {% if producto.descripcion %}
+        <p class="producto-descripcion">{{ producto.descripcion }}</p>
+        {% endif %}
+        <div class="producto-footer">
+            <span class="producto-precio">{{ price(producto.precio) }}</span>
+            <form action="{{ url_for('cart.agregar', producto_id=producto.id) }}" method="POST" class="add-cart-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-add-cart">
+                    <span>🛒</span> Agregar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro empty_state(icon, title, message, action_url='', action_text='') %}
+<div class="empty-state">
+    <span class="empty-icon">{{ icon }}</span>
+    <h3>{{ title }}</h3>
+    <p>{{ message }}</p>
+    {% if action_url and action_text %}
+    <a href="{{ action_url }}" class="btn-primary">{{ action_text }}</a>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro admin_product_row(producto) %}
+<tr>
+    <td>
+        {% set img = producto.get_primera_imagen() %}
+        {% if img %}
+        <img src="{{ url_for('static', filename='uploads/' + img) }}"
+             alt="{{ producto.nombre }}" class="table-img">
+        {% else %}
+        <span class="table-img-placeholder">🎁</span>
+        {% endif %}
+    </td>
+    <td><strong>{{ producto.nombre }}</strong></td>
+    <td class="table-desc">{{ producto.descripcion[:60] if producto.descripcion else '—' }}{% if producto.descripcion and producto.descripcion|length > 60 %}...{% endif %}</td>
+    <td>{{ price(producto.precio) }}</td>
+    <td><span class="badge">{{ producto.categoria_rel.nombre if producto.categoria_rel else '—' }}</span></td>
+    <td class="table-actions">
+        <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn-small btn-edit" title="Editar">✏️</a>
+        <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST"
+              onsubmit="return confirm('¿Eliminar ' + {{ producto.nombre|tojson|safe }} + '?')" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-small btn-delete" title="Eliminar">🗑️</button>
+        </form>
+    </td>
+</tr>
+{% endmacro %}
+
+{% macro admin_confirm_delete(producto) %}
+<form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST"
+      onsubmit="return confirm('¿Eliminar ' + {{ producto.nombre|tojson|safe }} + '?')" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn-small btn-delete" title="Eliminar">🗑️</button>
+</form>
+{% endmacro %}

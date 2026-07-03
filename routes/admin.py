@@ -1,21 +1,12 @@
-import os
-import json
-import uuid
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.utils import secure_filename
-from config import Config
+from sqlalchemy import func
 from models import db, Admin, Producto, Categoria
 from forms import ProductoForm, LoginForm
+from utils.image_utils import guardar_imagenes, eliminar_imagenes
+from utils.categoria_utils import populate_categoria_choices
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
-
-CAMPOS_IMAGEN = ['imagen_1', 'imagen_2', 'imagen_3']
-
-
-def _populate_categoria_choices(form):
-    categorias = Categoria.query.order_by(Categoria.nombre).all()
-    form.categoria_id.choices = [(0, 'Sin categoría')] + [(c.id, c.nombre) for c in categorias]
 
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
@@ -68,7 +59,7 @@ def lista_productos():
 @login_required
 def nuevo_producto():
     form = ProductoForm()
-    _populate_categoria_choices(form)
+    populate_categoria_choices(form)
 
     if form.validate_on_submit():
         cat_id = form.categoria_id.data or None
@@ -79,7 +70,7 @@ def nuevo_producto():
             categoria_id=cat_id,
             destacado=form.destacado.data
         )
-        producto.imagenes = _guardar_imagenes(form)
+        producto.imagenes = guardar_imagenes(form)
 
         db.session.add(producto)
         db.session.commit()
@@ -94,7 +85,7 @@ def nuevo_producto():
 def editar_producto(id):
     producto = Producto.query.get_or_404(id)
     form = ProductoForm(obj=producto)
-    _populate_categoria_choices(form)
+    populate_categoria_choices(form)
 
     if form.validate_on_submit():
         producto.nombre = form.nombre.data
@@ -103,9 +94,9 @@ def editar_producto(id):
         producto.categoria_id = form.categoria_id.data or None
         producto.destacado = form.destacado.data
 
-        nuevas = _guardar_imagenes(form)
+        nuevas = guardar_imagenes(form)
         if nuevas:
-            _eliminar_imagenes(producto)
+            eliminar_imagenes(producto)
             producto.imagenes = nuevas
 
         db.session.commit()
@@ -119,7 +110,7 @@ def editar_producto(id):
 @login_required
 def eliminar_producto(id):
     producto = Producto.query.get_or_404(id)
-    _eliminar_imagenes(producto)
+    eliminar_imagenes(producto)
     db.session.delete(producto)
     db.session.commit()
     flash('Producto eliminado correctamente', 'success')
@@ -129,7 +120,6 @@ def eliminar_producto(id):
 @admin_bp.route('/categorias')
 @login_required
 def lista_categorias():
-    from sqlalchemy import func
     resultados = db.session.query(
         Categoria,
         func.count(Producto.id).label('total')
@@ -182,34 +172,3 @@ def eliminar_categoria(id):
     db.session.commit()
     flash(f'Categoría "{categoria.nombre}" eliminada', 'success')
     return redirect(url_for('admin.lista_categorias'))
-
-
-def _guardar_imagenes(form):
-    nombres = []
-    for campo in CAMPOS_IMAGEN:
-        file = getattr(form, campo).data
-        if not file or file.filename == '':
-            continue
-        filename = secure_filename(file.filename)
-        parts = filename.rsplit('.', 1)
-        ext = parts[-1].lower() if len(parts) > 1 and parts[-1] else ''
-        if not ext or ext not in Config.ALLOWED_EXTENSIONS:
-            continue
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        path = os.path.join(Config.UPLOAD_FOLDER, filename)
-        file.save(path)
-        try:
-            from PIL import Image
-            Image.open(path).verify()
-        except Exception:
-            os.remove(path)
-            continue
-        nombres.append(filename)
-    return json.dumps(nombres) if nombres else ''
-
-
-def _eliminar_imagenes(producto):
-    for nombre in producto.get_imagenes():
-        path = os.path.join(Config.UPLOAD_FOLDER, nombre)
-        if os.path.exists(path):
-            os.remove(path)

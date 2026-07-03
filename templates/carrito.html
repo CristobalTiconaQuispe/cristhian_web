@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import price, empty_state %}
 {% block title %}Carrito - Golden Moments{% endblock %}
 
 {% block content %}
@@ -26,7 +27,7 @@
                     {% if item.producto.descripcion %}
                     <p class="item-desc">{{ item.producto.descripcion[:80] }}{% if item.producto.descripcion|length > 80 %}...{% endif %}</p>
                     {% endif %}
-                    <span class="item-precio-unit">Bs. {{ "%.2f"|format(item.producto.precio) }} c/u</span>
+                    <span class="item-precio-unit">{{ price(item.producto.precio) }} c/u</span>
                 </div>
                 <div class="carrito-item-cantidad">
                     <form action="{{ url_for('cart.actualizar', producto_id=item.producto.id) }}" method="POST" class="qty-form">
@@ -39,7 +40,7 @@
                 </div>
                 <div class="carrito-item-subtotal">
                     <span class="subtotal-label">Subtotal</span>
-                    <span class="subtotal-value">Bs. {{ "%.2f"|format(item.subtotal) }}</span>
+                    <span class="subtotal-value">{{ price(item.subtotal) }}</span>
                 </div>
                 <div class="carrito-item-accion">
                     <form action="{{ url_for('cart.eliminar', producto_id=item.producto.id) }}" method="POST">
@@ -57,15 +58,15 @@
                 {% for item in items %}
                 <div class="resumen-linea">
                     <span>{{ item.producto.nombre }} × {{ item.cantidad }}</span>
-                    <span>Bs. {{ "%.2f"|format(item.subtotal) }}</span>
+                    <span>{{ price(item.subtotal) }}</span>
                 </div>
                 {% endfor %}
             </div>
             <div class="resumen-total">
                 <span>Total</span>
-                <span class="total-value">Bs. {{ "%.2f"|format(total) }}</span>
+                <span class="total-value">{{ price(total) }}</span>
             </div>
-            <a href="https://wa.me/{{ config.get('WHATSAPP_NUMBER', '59163107834') }}?text={{ mensaje_whatsapp }}"
+            <a href="https://wa.me/{{ config.WHATSAPP_NUMBER }}?text={{ mensaje_whatsapp }}"
                target="_blank"
                rel="noopener"
                class="btn-whatsapp-order">
@@ -75,12 +76,7 @@
         </div>
     </div>
     {% else %}
-    <div class="empty-state">
-        <span class="empty-icon">🛒</span>
-        <h3>Tu carrito está vacío</h3>
-        <p>Agrega productos para realizar un pedido.</p>
-        <a href="{{ url_for('main.catalogo') }}" class="btn-primary">Ver productos</a>
-    </div>
+    {{ empty_state('🛒', 'Tu carrito está vacío', 'Agrega productos para realizar un pedido.', url_for('main.catalogo'), 'Ver productos') }}
     {% endif %}
 </section>
 {% endblock %}
