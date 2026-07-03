@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.min.css') }}">
 </head>
 <body>
     <nav class="navbar">
@@ -17,7 +17,9 @@
                 <span class="logo-text">Golden Moments</span>
             </a>
 
-            <div class="nav-links">
+            <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
+
+            <div class="nav-links" id="navLinks">
                 <a href="{{ url_for('main.index') }}" class="nav-link">Inicio</a>
                 <a href="{{ url_for('main.catalogo') }}" class="nav-link">Catálogo</a>
                 <a href="{{ url_for('main.nosotros') }}" class="nav-link">Nosotros</a>
@@ -92,6 +94,19 @@
             localStorage.setItem('theme', next);
             toggle.textContent = next === 'dark' ? '☀️' : '🌙';
         });
+
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', function() {
+                navLinks.classList.toggle('open');
+            });
+            navLinks.querySelectorAll('a, button').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    navLinks.classList.remove('open');
+                });
+            });
+        }
     })();
     </script>
     {% block scripts %}{% endblock %}

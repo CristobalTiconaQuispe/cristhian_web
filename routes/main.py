@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
+from sqlalchemy.orm import joinedload
 from models import Producto, Categoria
 
 main_bp = Blueprint('main', __name__)
@@ -6,7 +7,9 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    destacados = Producto.query.filter_by(destacado=True).order_by(
+    destacados = Producto.query.options(
+        joinedload(Producto.categoria_rel)
+    ).filter_by(destacado=True).order_by(
         Producto.fecha_creacion.desc()
     ).limit(6).all()
     return render_template('inicio.html', destacados=destacados)
@@ -15,12 +18,13 @@ def index():
 @main_bp.route('/catalogo')
 def catalogo():
     categoria_id = request.args.get('categoria', type=int)
+    base_query = Producto.query.options(joinedload(Producto.categoria_rel))
     if categoria_id:
-        productos = Producto.query.filter_by(categoria_id=categoria_id).order_by(
+        productos = base_query.filter_by(categoria_id=categoria_id).order_by(
             Producto.fecha_creacion.desc()
         ).all()
     else:
-        productos = Producto.query.order_by(Producto.fecha_creacion.desc()).all()
+        productos = base_query.order_by(Producto.fecha_creacion.desc()).all()
 
     categorias = Categoria.query.order_by(Categoria.nombre).all()
     return render_template(

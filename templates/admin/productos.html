@@ -25,7 +25,7 @@
                 {% for producto in productos %}
                 <tr>
                     <td>
-                        {% set img = producto.get_primera_imagen() %}
+                        {% set img = producto.get_thumbnail() %}
                         {% if img %}
                         <img src="{{ url_for('static', filename='uploads/' + img) }}"
                              alt="{{ producto.nombre }}" class="table-img">

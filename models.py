@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -43,6 +44,14 @@ class Producto(db.Model):
     def get_primera_imagen(self):
         imagenes = self.get_imagenes()
         return imagenes[0] if imagenes else None
+
+    def get_thumbnail(self, index=0):
+        imagenes = self.get_imagenes()
+        if not imagenes or index >= len(imagenes):
+            return None
+        nombre = imagenes[index]
+        base = os.path.splitext(nombre)[0]
+        return f"{base}_thumb.webp"
 
     def __repr__(self):
         return f'<Producto {self.nombre}>'

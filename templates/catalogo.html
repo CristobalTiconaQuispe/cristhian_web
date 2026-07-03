@@ -28,7 +28,7 @@
         {% for producto in productos %}
         <div class="producto-card">
             <div class="producto-img-wrapper">
-                {% set img = producto.get_primera_imagen() %}
+                {% set img = producto.get_thumbnail() %}
                 <a href="{{ url_for('main.producto_detalle', id=producto.id) }}">
                     {% if img %}
                     <img src="{{ url_for('static', filename='uploads/' + img) }}"

@@ -3,6 +3,7 @@ import json
 import uuid
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
+from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from config import Config
 from models import db, Admin, Producto, Categoria
@@ -48,7 +49,9 @@ def logout():
 def dashboard():
     total_productos = Producto.query.count()
     total_categorias = Categoria.query.count()
-    ultimos = Producto.query.order_by(Producto.fecha_creacion.desc()).limit(5).all()
+    ultimos = Producto.query.options(
+        joinedload(Producto.categoria_rel)
+    ).order_by(Producto.fecha_creacion.desc()).limit(5).all()
     return render_template(
         'admin/dashboard.html',
         total_productos=total_productos,
@@ -195,21 +198,41 @@ def _guardar_imagenes(form):
         ext = parts[-1].lower() if len(parts) > 1 and parts[-1] else ''
         if not ext or ext not in Config.ALLOWED_EXTENSIONS:
             continue
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        path = os.path.join(Config.UPLOAD_FOLDER, filename)
-        file.save(path)
+        base_name = uuid.uuid4().hex
+        full_name = f"{base_name}.{ext}"
+        full_path = os.path.join(Config.UPLOAD_FOLDER, full_name)
+        file.save(full_path)
         try:
             from PIL import Image
-            Image.open(path).verify()
+            img = Image.open(full_path)
+            img.verify()
         except Exception:
-            os.remove(path)
+            os.remove(full_path)
             continue
-        nombres.append(filename)
+        try:
+            img = Image.open(full_path)
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+            if img.width > 800:
+                ratio = 800 / img.width
+                new_h = int(img.height * ratio)
+                img = img.resize((800, new_h), Image.LANCZOS)
+            img.save(full_path, 'JPEG', quality=80)
+            thumb_name = f"{base_name}_thumb.webp"
+            thumb_path = os.path.join(Config.UPLOAD_FOLDER, thumb_name)
+            thumb = img.copy()
+            thumb.thumbnail((200, 200), Image.LANCZOS)
+            thumb.save(thumb_path, 'WEBP', quality=75)
+        except Exception:
+            pass
+        nombres.append(full_name)
     return json.dumps(nombres) if nombres else ''
 
 
 def _eliminar_imagenes(producto):
     for nombre in producto.get_imagenes():
-        path = os.path.join(Config.UPLOAD_FOLDER, nombre)
-        if os.path.exists(path):
-            os.remove(path)
+        base = os.path.splitext(nombre)[0]
+        for fname in [nombre, f"{base}_thumb.webp"]:
+            path = os.path.join(Config.UPLOAD_FOLDER, fname)
+            if os.path.exists(path):
+                os.remove(path)
